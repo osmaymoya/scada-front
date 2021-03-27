@@ -3,6 +3,10 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import Axios from "axios/index";
+
+// const axiosInstance = Axios.create();
+// Axios.defaults.headers['Access-Control-Allow-Origin'] = '*';
 
 ReactDOM.render(
   <React.StrictMode>
