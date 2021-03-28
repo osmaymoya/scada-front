@@ -1,7 +1,7 @@
 import './App.css';
 import React, {useEffect, useState} from 'react';
 import Axios from "axios/index";
-import {Container, Form} from 'react-bootstrap';
+import {Container, Form, Row, Col, Button} from 'react-bootstrap';
 import {Line} from 'react-chartjs-2';
 
 
@@ -18,20 +18,32 @@ import {Line} from 'react-chartjs-2';
 //
 // const myService = new Axios('baseURL', 'bearerToken');
 
+
+let intervalo;
+let intervalTime = 1000;
+let limit = 10;
+let offset = 0;
+let sensorId = 0;
+
+const limits = [10,20,30,40,50,100,200,300,400,500];
+const intervals = [1000, 3000,5000,10000,15000,20000];
+
 function App() {
 
     const [data, setData] = useState([]);
     const [labels, setLabels] = useState([]);
-    const [limit, setLimit] = useState(10);
-    const [offset, setOffset] = useState(0);
-    const [sensorId, setSensorId] = useState(null);
+    const [sensorName, setSensorName] = useState("");
     const [sensors, setSensors] = useState([]);
-
-    const limits = [10,20,30,40,50,100,200,300,400,500];
+    const [live, setLive] = useState(1);
 
     useEffect(() => {
         loadSensors();
+        initCicle();
     }, []);
+
+    const initCicle = ()=>{
+        intervalo=setInterval(loadData,intervalTime);
+    };
 
     const loadData=()=>{
 
@@ -65,9 +77,10 @@ function App() {
         },
       })
           .then((res) => {
-            setSensorId(res.data.length > 0 ? res.data[0].id : null);
+            sensorId = res.data.length > 0 ? res.data[0].id : null;
+            setSensorName(res.data.length > 0 ? res.data[0].name : "");
             setSensors(res.data.map(it=>{
-                return <option key={it.id} value={it.id}>{it.name}</option>
+                return {id: it.id, name: it.name}
             }));
             loadData();
           })
@@ -92,41 +105,82 @@ function App() {
         setLabels(labels)
     };
 
-    const handleSensorChange = event=>{
-        setSensorId(event.target.value);
+    const resetCicle = () => {
+        clearInterval(intervalo);
         loadData();
+        initCicle();
+    };
+
+    const handleSensorChange = event=>{
+        sensorId = event.target.value;
+        setSensorName(sensors.find(it=>it.id == event.target.value).name);
+        if(live) resetCicle();
+        else loadData();
     };
 
     const handleLimitChange = event=>{
-        setLimit(event.target.value);
-        loadData();
+        limit = event.target.value;
+        if(live) resetCicle();
+        else loadData();
+    };
+
+    const handleIntervalChange = event=>{
+        intervalTime = event.target.value;
+        if(live) resetCicle();
+        else loadData();
+    };
+
+    const handleLive = ()=>{
+        if(live) clearInterval(intervalo);
+        else{
+            loadData();
+            initCicle();
+        }
+        setLive(!live);
     };
 
   return (
-    <div className="App">
-        <Form.Group>
-            <Form.Label>Sensor</Form.Label>
-            <Form.Control name="sensorId" as="select" onChange={(e)=>handleSensorChange(e)}>
-                {sensors}
-            </Form.Control>
-        </Form.Group>
-        <Form.Group>
-            <Form.Label>Cantidad</Form.Label>
-            <Form.Control name="limit" as="select" onChange={(e)=>handleLimitChange(e)}>
-                {limits.map(it=> <option key={it} value={it}>{it}</option> )}
-            </Form.Control>
-        </Form.Group>
+    <Container>
+            <Form as={Container} fluid>
+                <Row>
+                    <Form.Group as={Col} sm="4">
+                        <Form.Label className={"left"}>Sensor</Form.Label>
+                        <Form.Control name="sensorId" as="select" onChange={(e)=>handleSensorChange(e)}>
+                            {sensors.map(it=> <option key={it.id} value={it.id}>{it.name}</option> )}
+                        </Form.Control>
+                    </Form.Group>
+                    <Form.Group  as={Col} sm="4">
+                        <Form.Label>Cantidad</Form.Label>
+                        <Form.Control name="limit" as="select" onChange={(e)=>handleLimitChange(e)}>
+                            {limits.map(it=> <option key={it} value={it}>{it}</option> )}
+                        </Form.Control>
+                    </Form.Group>
+                    <Form.Group  as={Col} sm="4">
+                        <Form.Label>Intervalos (ms)</Form.Label>
+                        <Form.Control name="interval" as="select" onChange={(e)=>handleIntervalChange(e)}>
+                            {intervals.map(it=> <option key={it} value={it}>{it}</option> )}
+                        </Form.Control>
+                    </Form.Group>
+                </Row>
+                <Row>
+                    <Col>
+                        <Button variant="primary" onClick={()=>handleLive()}>
+                            { live ? "Detener" : "Iniciar"}
+                        </Button>
+                    </Col>
+                </Row>
+            </Form>
         <Container>
             <Line
-                data={{labels: [0, ...labels],
+                data={{labels: labels,
                     datasets: [
                         {
-                            label: "Label del grafico",
+                            label: sensorName,
                             borderColor: '#1b087e',
                             borderWidth: 1,
                             hoverBackgroundColor: '#fe4426',
                             hoverBorderColor: '#EE023A',
-                            data: [0,...data]
+                            data: data
                         }
                     ]}}
                 /*width={100}
@@ -134,7 +188,7 @@ function App() {
                 options={{maintainAspectRatio: true}}
             />
         </Container>
-    </div>
+    </Container>
   );
 }
 
