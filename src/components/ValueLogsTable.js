@@ -17,6 +17,10 @@ const columns = [
         label: 'Lectura',
         field: 'value',
     },
+    {
+        label: 'UM',
+        field: 'um',
+    },
 ];
 
 function ValueLogsTable() {
@@ -57,8 +61,9 @@ function ValueLogsTable() {
                     hour:  "2-digit",
                     minute: "2-digit",
                     second: "2-digit"}),
-                sensor:it.sensor,
-                value:it.value,
+                sensor: it.sensor.name,
+                um: it.measure_unit.symbol,
+                value: it.value,
             }
         });
         setRows(rows);
