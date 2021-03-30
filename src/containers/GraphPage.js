@@ -46,7 +46,7 @@ function GraphPage() {
             mapData(res.data.results.reverse());
           })
           .catch((error) => {
-            console.log("Error en la peticion")
+            console.log("Error en la peticion (" + error + ")")
           });
     };
 
