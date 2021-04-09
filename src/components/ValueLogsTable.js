@@ -1,6 +1,6 @@
 import React, {useEffect, useState, useMemo, useRef, useCallback} from "react";
 import styled from 'styled-components'
-import {Container, Row, Col} from 'react-bootstrap';
+import {Container, Row, Col, Form} from 'react-bootstrap';
 import Axios from "axios";
 
 import { useTable, usePagination } from 'react-table'
@@ -24,6 +24,7 @@ function Table({
                    fetchData,
                    loading,
                    pageCount: controlledPageCount,
+                   sensorId,
                }) {
     const {
         getTableProps,
@@ -57,8 +58,8 @@ function Table({
 
     // Listen for changes in pagination and use the state to fetch our new data
     useEffect(() => {
-        fetchData({ pageIndex, pageSize })
-    }, [fetchData, pageIndex, pageSize]);
+        fetchData({ pageIndex, pageSize, sensorId })
+    }, [fetchData, pageIndex, pageSize, sensorId]);
 
     // Render the UI for your table
     return (
@@ -99,7 +100,7 @@ function Table({
                         // Use our custom loading state to show a loading indicator
                         <td colSpan="10000">Loading...</td>
                     ) : (
-                        <td colSpan="10000"></td>
+                        <td colSpan="10000">{page.length == 0 ? "No data to show" : ""}</td>
                         // <td colSpan="10000">
                         //     Showing {page.length} of ~{controlledPageCount * pageSize}{' '}
                         //     results
@@ -183,13 +184,18 @@ function ValueLogsTable() {
         []
     );
 
+    // const sensors = loadSensors();
+
     // We'll start our table without any data
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [pageCount, setPageCount] = useState(0);
     const fetchIdRef = useRef(0);
 
-    const fetchData = useCallback(({ pageSize, pageIndex }) => {
+    const [sensors, setSensors] = useState([]);
+    const [sensorId, setSensorId] = useState(-1);
+
+    const fetchData = useCallback(({ pageSize, pageIndex, sensorId}) => {
         // This will get called when the table needs new data
         // You could fetch your data from literally anywhere,
         // even a server. But for this example, we'll just fake it.
@@ -208,7 +214,7 @@ function ValueLogsTable() {
                 params: {
                     limit: pageSize,
                     offset: startRow,
-                    // sensor_id: 1
+                    sensor_id: sensorId
                 },
                 headers: {
                     'Content-Type': 'application/json',
@@ -244,12 +250,52 @@ function ValueLogsTable() {
     }, []);
 
 
+    useEffect(() => {
+        loadSensors();
+    }, []);
+
+    const loadSensors = () => {
+
+        Axios.get("http://localhost:8000/api/sensors/", {
+            params: {
+            },
+            headers: {
+                'Content-Type': 'application/json',
+                // 'Access-Control-Allow-Origin': 'http://localhost:8000'
+            },
+        })
+            .then((res) => {
+                setSensorId(res.data.length > 0 ? res.data[0].id : null);
+                setSensors(res.data.map(it=>{
+                    return {id: it.id, name: it.name}
+                }));
+            })
+            .catch((error) => {
+                console.log("Error en la peticion (" + error + ")" )
+            });
+    };
+
+    const handleSensorChange = event=>{
+        setSensorId(event.target.value);
+        // if(live) resetCicle();
+        // else loadData();
+    };
+
+
         return (
             <Container className="pt-3">
                 <Row  className="mb-5 border-bottom">
                     <Col md={10}>
                         <h1>Registros</h1>
                     </Col>
+                </Row>
+                <Row>
+                    <Form.Group as={Col} sm="4">
+                        <Form.Label className={"left"}>Sensor</Form.Label>
+                        <Form.Control name="sensorId" as="select" onChange={(e)=>handleSensorChange(e)}>
+                            {sensors.map(it=> <option key={it.id} value={it.id}>{it.name}</option> )}
+                        </Form.Control>
+                    </Form.Group>
                 </Row>
                 <Row>
                     <Col>
@@ -259,6 +305,7 @@ function ValueLogsTable() {
                             fetchData={fetchData}
                             loading={loading}
                             pageCount={pageCount}
+                            sensorId={sensorId}
                         />
                     </Col>
                 </Row>
