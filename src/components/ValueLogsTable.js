@@ -65,12 +65,13 @@ function Table({
     return (
         <>
             <Styles>
-            <table {...getTableProps()} className="table-striped table-hover table-responsive mb-3">
-                <thead>
+                <div className="table-responsive">
+            <table {...getTableProps()} className="table table-hover mb-3 w-100">
+                <thead className="thead-dark">
                 {headerGroups.map(headerGroup => (
                     <tr {...headerGroup.getHeaderGroupProps()}>
                         {headerGroup.headers.map(column => (
-                            <th {...column.getHeaderProps()}>
+                            <th {...column.getHeaderProps()} scope="col">
                                 {column.render('Header')}
                                 <span>
                     {column.isSorted
@@ -90,7 +91,7 @@ function Table({
                     return (
                         <tr {...row.getRowProps()}>
                             {row.cells.map(cell => {
-                                return <td {...cell.getCellProps()} style={{padding: "5px 20px 5px 5px"}}>{cell.render('Cell')}</td>
+                                return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
                             })}
                         </tr>
                     )
@@ -109,6 +110,7 @@ function Table({
                 </tr>
                 </tbody>
             </table>
+                </div>
             </Styles>
             {/*
         Pagination can be built however you'd like.
