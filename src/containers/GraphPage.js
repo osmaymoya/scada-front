@@ -23,6 +23,11 @@ function GraphPage() {
     useEffect(() => {
         loadSensors();
         initCicle();
+
+        return () => {
+            if(live)
+                handleLive();
+        }
     }, []);
 
     const initCicle = ()=>{

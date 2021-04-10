@@ -285,8 +285,8 @@ function ValueLogsTable() {
 
 
         return (
-            <Container className="pt-3">
-                <Row  className="mb-5 border-bottom">
+            <Container>
+                <Row  className="mb-4 border-bottom">
                     <Col md={10}>
                         <h1>Registros</h1>
                     </Col>
